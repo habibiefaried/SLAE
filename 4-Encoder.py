@@ -13,9 +13,9 @@ print 'Encoded shellcode ...'
 for x in bytearray(shellcode) :
 	obfuscate = random.randint(2,253)
 	#x = x + 0x01
-	y = ~x & 0xff
-	y = y + 0x01
-
+	y = ~x & 0xff	#NOT Operation
+	y = y + 0x01	#ADD Operation
+	y = y ^ 0x32	#XOR Operation
 	encoded += '\\x'
 	encoded += '%02x' % y
 	encoded += '\\x%02x' % obfuscate
